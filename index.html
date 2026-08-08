@@ -49,6 +49,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <div class="line-switch">
     <button class="line-btn active" onclick="setLine('hybrid',this)">HYBRID</button>
     <button class="line-btn" onclick="setLine('hybro',this)">HYBRO</button>
+    <button class="line-btn" onclick="setLine('acc',this)">Аксесуари</button>
   </div>
 </header>
 
@@ -75,6 +76,16 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="pill-group" id="hybro-rail"></div>
     <div class="section-label">Знижка</div>
     <div class="discount-group" id="hybro-discounts"></div>
+  </div>
+
+  <!-- АКСЕСУАРИ -->
+  <div id="section-acc" style="display:none">
+    <div class="section-label">Товар</div>
+    <div class="pill-group" id="acc-types"></div>
+    <div class="section-label">Модель</div>
+    <div class="pill-group" id="acc-models"></div>
+    <div class="section-label">Знижка</div>
+    <div class="discount-group" id="acc-discounts"></div>
   </div>
 
   <!-- РЕЗУЛЬТАТ -->
@@ -111,9 +122,10 @@ const hybridData = [
   {model:'550',color:'B',thermo:true, retail:9090},
 ];
 const hybridDiscounts=[
-  {label:'Роздріб',val:0,popular:false},{label:'15%',val:0.15},{label:'25%',val:0.25,popular:true},
-  {label:'30%',val:0.30,popular:true},{label:'40%',val:0.40},
-  {label:'50%',val:0.50}
+  {label:'Роздріб',val:0,popular:false},{label:'10%',val:0.10},
+  {label:'15%',val:0.15},{label:'20%',val:0.20},{label:'25%',val:0.25,popular:true},
+  {label:'30%',val:0.30,popular:true},{label:'35%',val:0.35},{label:'40%',val:0.40},
+  {label:'45%',val:0.45},{label:'50%',val:0.50}
 ];
 
 // ── ДАНІ HYBRO (ONYX) ──
@@ -171,17 +183,32 @@ const hybroGlassData = [
 const hybroData = [...hybroSatinData, ...hybroGlassData];
 
 const hybroDiscounts=[
-  {label:'Роздріб',val:0,popular:false},{label:'10%',val:0.10},{label:'15%',val:0.15},
-  {label:'20%',val:0.20,popular:true},{label:'25%',val:0.25,popular:true},
-  {label:'30%',val:0.30,popular:true},{label:'35%',val:0.35},
-  {label:'40%',val:0.40},{label:'50%',val:0.50},
-  {label:'Склад 55%',val:0.55},{label:'Передзам. 60%',val:0.60},
+  {label:'Роздріб',val:0,popular:false},{label:'10%',val:0.10},
+  {label:'15%',val:0.15},{label:'20%',val:0.20,popular:true},{label:'25%',val:0.25,popular:true},
+  {label:'30%',val:0.30,popular:true},{label:'35%',val:0.35},{label:'40%',val:0.40},
+  {label:'45%',val:0.45},{label:'50%',val:0.50}
 ];
+
+// ── ДАНІ АКСЕСУАРИ ──
+const accData = [
+  {type:'holder',model:'SS 300',retail:840},
+  {type:'holder',model:'SB 300',retail:880},
+  {type:'holder',model:'MS 450',retail:880},
+  {type:'holder',model:'MB 450',retail:920},
+  {type:'holder',model:'LS 600',retail:970},
+  {type:'holder',model:'LB 600',retail:1010},
+  {type:'hook',model:'S',retail:470},
+  {type:'hook',model:'B',retail:490},
+];
+const accNames={holder:'Тримач HYBRO',hook:'Гачок HYBRO'};
+// Знижки як у HYBRID
+const accDiscounts=hybridDiscounts;
 
 // ── СТАН ──
 let line='hybrid';
 let hModel='375', hColor='W', hThermo=false, hDiscount=null;
 let oSize='1L', oGlass='S', oColorW='W', oRail='S', oDiscount=null;
+let aType='holder', aModel='SS 300', aDiscount=null;
 
 // ── ІНІЦІАЛІЗАЦІЯ ──
 function initHybrid(){
@@ -243,8 +270,37 @@ function setOGlass(g,btn){oGlass=g;document.querySelectorAll('#hybro-glass .pill
 function setOColor(c,btn){oColorW=c;document.querySelectorAll('#hybro-colors .pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');calcHybro();}
 function setORail(r,btn){oRail=r;document.querySelectorAll('#hybro-rail .pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');calcHybro();}
 
+// ── АКСЕСУАРИ ──
+function initAcc(){
+  document.getElementById('acc-types').innerHTML=`
+    <button class="pill${aType==='holder'?' active':''}" onclick="setAType('holder',this)">Тримач</button>
+    <button class="pill${aType==='hook'?' active':''}" onclick="setAType('hook',this)">Гачок</button>`;
+  renderAccModels();
+  renderDiscounts('acc-discounts', accDiscounts, aDiscount, 'A');
+}
+
+function renderAccModels(){
+  const models=accData.filter(i=>i.type===aType).map(i=>i.model);
+  if(!models.includes(aModel)) aModel=models[0];
+  document.getElementById('acc-models').innerHTML=models.map(m=>
+    `<button class="pill${m===aModel?' active':''}" onclick="setAModel('${m}',this)">${m}</button>`
+  ).join('');
+}
+
+function setAType(t,btn){aType=t;document.querySelectorAll('#acc-types .pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAccModels();calcAcc();}
+function setAModel(m,btn){aModel=m;document.querySelectorAll('#acc-models .pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');calcAcc();}
+
+function calcAcc(){
+  const item=accData.find(i=>i.type===aType&&i.model===aModel);
+  if(!item||aDiscount===null){hideResult();return;}
+  const price=Math.round(item.retail*(1-aDiscount));
+  const name=`${accNames[aType]} ${aModel}`;
+  showResult(name, price, item.retail, aDiscount);
+}
+
 function setDiscount(prefix, val){
   if(prefix==='H'){hDiscount=val;renderDiscounts('hybrid-discounts',hybridDiscounts,hDiscount,'H');calcHybrid();}
+  else if(prefix==='A'){aDiscount=val;renderDiscounts('acc-discounts',accDiscounts,aDiscount,'A');calcAcc();}
   else{oDiscount=val;renderDiscounts('hybro-discounts',hybroDiscounts,oDiscount,'O');calcHybro();}
 }
 
@@ -299,8 +355,10 @@ function setLine(l,btn){
   btn.classList.add('active');
   document.getElementById('section-hybrid').style.display=l==='hybrid'?'block':'none';
   document.getElementById('section-hybro').style.display=l==='hybro'?'block':'none';
+  document.getElementById('section-acc').style.display=l==='acc'?'block':'none';
   hideResult();
   if(l==='hybro') initHybro();
+  if(l==='acc') initAcc();
 }
 
 // Логотип
@@ -310,6 +368,7 @@ function setLine(l,btn){
 
 initHybrid();
 initHybro();
+initAcc();
 </script>
 </body>
 </html>
