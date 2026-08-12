@@ -136,23 +136,31 @@ const hybroSatinData = [
   {size:'1K',color:'BB',rail:'B',glass:'S',retail:10290},
   {size:'1K',color:'WS',rail:'S',glass:'S',retail:10590},
   {size:'1K',color:'WB',rail:'B',glass:'S',retail:10890},
+  {size:'1K',color:'GS',rail:'S',glass:'S',retail:9990},
+  {size:'1K',color:'GB',rail:'B',glass:'S',retail:10290},
   // 1S
   // 1L
   {size:'1L',color:'BS',rail:'S',glass:'S',retail:9890},
   {size:'1L',color:'BB',rail:'B',glass:'S',retail:10190},
   {size:'1L',color:'WS',rail:'S',glass:'S',retail:10490},
   {size:'1L',color:'WB',rail:'B',glass:'S',retail:10790},
+  {size:'1L',color:'GS',rail:'S',glass:'S',retail:9890},
+  {size:'1L',color:'GB',rail:'B',glass:'S',retail:10190},
   // 2M
   {size:'2M',color:'BS',rail:'S',glass:'S',retail:16090},
   {size:'2M',color:'BB',rail:'B',glass:'S',retail:16590},
   {size:'2M',color:'WS',rail:'S',glass:'S',retail:17290},
   {size:'2M',color:'WB',rail:'B',glass:'S',retail:17790},
+  {size:'2M',color:'GS',rail:'S',glass:'S',retail:16090},
+  {size:'2M',color:'GB',rail:'B',glass:'S',retail:16590},
   // 3S
   // 3M
   {size:'3M',color:'BS',rail:'S',glass:'S',retail:23590},
   {size:'3M',color:'BB',rail:'B',glass:'S',retail:24340},
   {size:'3M',color:'WS',rail:'S',glass:'S',retail:25290},
   {size:'3M',color:'WB',rail:'B',glass:'S',retail:26040},
+  {size:'3M',color:'GS',rail:'S',glass:'S',retail:23590},
+  {size:'3M',color:'GB',rail:'B',glass:'S',retail:24340},
   // 3L
 ];
 // Глянець прайс
@@ -247,7 +255,8 @@ function renderHybroOptions(){
     <button class="pill${oGlass==='G'?' active':''}" onclick="setOGlass('G',this)">Глянець</button>`;
   document.getElementById('hybro-colors').innerHTML=`
     <button class="pill${oColorW==='W'?' active':''}" onclick="setOColor('W',this)">Біле (W)</button>
-    <button class="pill${oColorW==='B'?' active':''}" onclick="setOColor('B',this)">Чорне (B)</button>`;
+    <button class="pill${oColorW==='B'?' active':''}" onclick="setOColor('B',this)">Чорне (B)</button>
+    <button class="pill${oColorW==='G'?' active':''}" onclick="setOColor('G',this)">Сіре (G)</button>`;
   document.getElementById('hybro-rail').innerHTML=`
     <button class="pill${oRail==='S'?' active':''}" onclick="setORail('S',this)">Сатин (S)</button>
     <button class="pill${oRail==='B'?' active':''}" onclick="setORail('B',this)">Чорний (B)</button>`;
