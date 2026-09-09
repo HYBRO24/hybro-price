@@ -41,6 +41,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .disc-btn.active{background:var(--blue);color:var(--blue-text);border-color:var(--blue-border)}
 .disc-btn.popular::after{content:'★';font-size:9px;position:absolute;top:-4px;right:-4px;color:var(--blue-text);background:var(--blue);border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:14px}
 .empty{font-size:13px;color:var(--text3);text-align:center;padding:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.qty-btn{width:26px;height:26px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qty-btn:hover{background:var(--surface2)}
 </style>
 </head>
 <body>
@@ -95,11 +97,29 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div><span class="result-price" id="result-price"></span><span class="result-currency">₴</span></div>
     <div class="result-retail" id="result-retail"></div>
     <div class="result-discount" id="result-discount"></div>
+    <button onclick="addToCart()" id="add-cart-btn" style="margin-top:1rem;width:100%;padding:9px;font-size:13px;font-weight:500;border:1px solid var(--blue-border);border-radius:var(--radius);background:var(--blue);color:var(--blue-text);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">+ Додати в кошик</button>
     <div style="margin-top:1rem;text-align:left">
       <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Для копіювання</div>
       <div style="position:relative">
         <textarea id="copy-text" readonly style="width:100%;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:none;height:60px;line-height:1.5"></textarea>
         <button onclick="copyText()" style="position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif" id="copy-btn">Копіювати</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- КОШИК -->
+  <div id="cart-section" style="display:none;margin-top:1.5rem">
+    <div class="section-label">Кошик (<span id="cart-count">0</span>)</div>
+    <div id="cart-items"></div>
+    <div class="card" id="cart-total-box" style="display:none;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;font-weight:600">Разом</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600" id="cart-total"></span>
+    </div>
+    <div style="margin-top:.75rem">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Для копіювання</div>
+      <div style="position:relative">
+        <textarea id="cart-copy-text" readonly style="width:100%;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:none;height:110px;line-height:1.5"></textarea>
+        <button onclick="copyCart()" style="position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif" id="cart-copy-btn">Копіювати кошик</button>
       </div>
     </div>
   </div>
@@ -217,6 +237,115 @@ let line='hybrid';
 let hModel='375', hColor='W', hThermo=false, hDiscount=null;
 let oSize='1L', oGlass='S', oColorW='W', oRail='S', oDiscount=null;
 let aType='holder', aModel='SS 300', aDiscount=null;
+
+// ── КОШИК ──
+let cart=[];
+let cartIdSeq=1;
+
+function currentSelection(){
+  if(line==='hybrid'){
+    const item=hybridData.find(i=>i.model===hModel&&i.color===hColor&&i.thermo===hThermo);
+    if(!item) return null;
+    return {name:`HYBRID${hThermo?' T':''} ${hModel} (${hColor})`, retail:item.retail, discount:hDiscount};
+  }
+  if(line==='hybro'){
+    const colorCode=oColorW+oRail;
+    const item=hybroData.find(i=>i.size===oSize&&i.glass===oGlass&&i.color===colorCode);
+    if(!item) return null;
+    const glassPrefix=oGlass==='S'?' S':'';
+    return {name:'HYBRO'+glassPrefix+' '+oSize+' '+oColorW+oRail, retail:item.retail, discount:oDiscount};
+  }
+  if(line==='acc'){
+    const item=accData.find(i=>i.type===aType&&i.model===aModel);
+    if(!item) return null;
+    return {name:`${accNames[aType]} ${aModel}`, retail:item.retail, discount:aDiscount};
+  }
+  return null;
+}
+
+function addToCart(){
+  const sel=currentSelection();
+  if(!sel) return;
+  cart.push({id:cartIdSeq++, name:sel.name, retail:sel.retail, discount:(sel.discount===null?0:sel.discount), qty:1});
+  renderCart();
+  document.getElementById('cart-section').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function removeFromCart(id){
+  cart=cart.filter(i=>i.id!==id);
+  renderCart();
+}
+
+function setCartDiscount(id,val){
+  const item=cart.find(i=>i.id===id);
+  if(item) item.discount=val;
+  renderCart();
+}
+
+function setCartQty(id,qty){
+  const item=cart.find(i=>i.id===id);
+  if(!item) return;
+  qty=Math.max(1,Math.min(999,qty));
+  item.qty=qty;
+  renderCart();
+}
+
+function renderCart(){
+  document.getElementById('cart-count').textContent=cart.length;
+  document.getElementById('cart-section').style.display=cart.length?'block':'none';
+  const wrap=document.getElementById('cart-items');
+  wrap.innerHTML=cart.map(item=>{
+    const unitPrice=Math.round(item.retail*(1-item.discount));
+    const lineTotal=unitPrice*item.qty;
+    const discBtns=hybridDiscounts.map(d=>
+      `<button class="disc-btn${d.val===item.discount?' active':''}${d.popular?' popular':''}" onclick="setCartDiscount(${item.id},${d.val})">${d.label}</button>`
+    ).join('');
+    const subLabel=item.qty>1
+      ? `${unitPrice.toLocaleString('uk-UA')} ₴ / шт · роздріб ${item.retail.toLocaleString('uk-UA')} ₴`
+      : `роздріб ${item.retail.toLocaleString('uk-UA')} ₴`;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
+        <div style="font-size:14px;font-weight:500">${item.name}</div>
+        <button onclick="removeFromCart(${item.id})" style="border:none;background:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:0 2px">×</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.6rem;gap:.5rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:.4rem">
+          <button class="qty-btn" onclick="setCartQty(${item.id},${item.qty-1})">−</button>
+          <span style="min-width:22px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:14px">${item.qty}</span>
+          <button class="qty-btn" onclick="setCartQty(${item.id},${item.qty+1})">+</button>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;text-align:right">${lineTotal.toLocaleString('uk-UA')}<span style="font-size:13px;color:var(--text3);font-weight:400"> ₴</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;text-align:right">${subLabel}</div>
+      <div class="discount-group" style="margin-top:.6rem">${discBtns}</div>
+    </div>`;
+  }).join('');
+
+  const total=cart.reduce((s,i)=>s+Math.round(i.retail*(1-i.discount))*i.qty,0);
+  document.getElementById('cart-total').textContent=total.toLocaleString('uk-UA')+' ₴';
+  document.getElementById('cart-total-box').style.display=cart.length?'flex':'none';
+
+  const lines=cart.map(i=>{
+    const unitPrice=Math.round(i.retail*(1-i.discount));
+    const lineTotal=unitPrice*i.qty;
+    const qtyPart=i.qty>1?` × ${i.qty}`:'';
+    const discPart=i.discount>0?` (-${Math.round(i.discount*100)}%)`:'';
+    return `${i.name}${qtyPart} — ${lineTotal.toLocaleString('uk-UA')} ₴${discPart}`;
+  });
+  if(cart.length) lines.push(`Разом: ${total.toLocaleString('uk-UA')} ₴`);
+  document.getElementById('cart-copy-text').value=lines.join('\n');
+}
+
+function copyCart(){
+  const ta=document.getElementById('cart-copy-text');
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const btn=document.getElementById('cart-copy-btn');
+    btn.textContent='Скопійовано ✓';
+    btn.style.color='var(--green)';
+    setTimeout(()=>{btn.textContent='Копіювати кошик';btn.style.color='';},2000);
+  }).catch(()=>{document.execCommand('copy');});
+}
 
 // ── ІНІЦІАЛІЗАЦІЯ ──
 function initHybrid(){
