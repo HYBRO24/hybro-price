@@ -122,6 +122,22 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         <button onclick="copyCart()" style="position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif" id="cart-copy-btn">Копіювати кошик</button>
       </div>
     </div>
+    <button onclick="toggleInvoiceForm()" id="invoice-toggle-btn" style="margin-top:.75rem;width:100%;padding:9px;font-size:13px;font-weight:500;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Сформувати рахунок</button>
+    <div id="invoice-form" style="display:none;margin-top:.75rem;padding:.9rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem">Дані рахунку</div>
+      <input id="inv-name" type="text" placeholder="Ім'я клієнта" style="width:100%;padding:.5rem .6rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);margin-bottom:.5rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+      <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+        <input id="inv-number" type="text" placeholder="№ рахунка" style="flex:1;min-width:0;padding:.5rem .6rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+        <input id="inv-date" type="text" placeholder="дд.мм.рррр" style="flex:1;min-width:0;padding:.5rem .6rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+      </div>
+      <button onclick="generateInvoice()" style="width:100%;padding:9px;font-size:13px;font-weight:500;border:1px solid var(--blue-border);border-radius:var(--radius);background:var(--blue);color:var(--blue-text);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Згенерувати текст</button>
+      <div id="invoice-result" style="display:none;margin-top:.75rem">
+        <div style="position:relative">
+          <textarea id="invoice-text" readonly style="width:100%;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:none;height:280px;line-height:1.5;box-sizing:border-box"></textarea>
+          <button onclick="copyInvoice()" id="invoice-copy-btn" style="position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Копіювати</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -344,6 +360,56 @@ function copyCart(){
     btn.textContent='Скопійовано ✓';
     btn.style.color='var(--green)';
     setTimeout(()=>{btn.textContent='Копіювати кошик';btn.style.color='';},2000);
+  }).catch(()=>{document.execCommand('copy');});
+}
+
+function toggleInvoiceForm(){
+  const form=document.getElementById('invoice-form');
+  const show=form.style.display==='none';
+  form.style.display=show?'block':'none';
+  if(show && !document.getElementById('inv-date').value){
+    const d=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    document.getElementById('inv-date').value=`${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
+  }
+}
+
+function generateInvoice(){
+  const name=document.getElementById('inv-name').value.trim()||'клієнте';
+  const number=document.getElementById('inv-number').value.trim()||'—';
+  const date=document.getElementById('inv-date').value.trim()||'';
+  const total=cart.reduce((s,i)=>s+Math.round(i.retail*(1-i.discount))*i.qty,0);
+  const itemLines=cart.map((i,idx)=>`${idx+1}. ${i.name} — ${i.qty} шт.`).join('\n');
+
+  const text=`Доброго дня, ${name}!
+Надсилаю деталі вашого замовлення та реквізити для оплати за рахунком № ${number} від ${date} р.:
+Ваше замовлення:
+
+${itemLines}
+
+Реквізити для оплати:
+
+* Отримувач: ФОП Сушко Владислав Юрійович
+* IBAN: \`UA543052990000026003031619772\`
+* ІПН / ЄДРПОУ: \`3094810756\`
+* Банк: АТ «Приватбанк»
+* Сума до сплати: ${total.toLocaleString('uk-UA')} грн
+* Призначення платежу: \`Оплата за товар згідно з рах. № ${number} від ${date}\`
+
+Будь ласка, надішліть квитанцію або скриншот оплати у відповідь, щоб ми передали замовлення в комплектацію та доставку. Дякую!`;
+
+  document.getElementById('invoice-text').value=text;
+  document.getElementById('invoice-result').style.display='block';
+}
+
+function copyInvoice(){
+  const ta=document.getElementById('invoice-text');
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const btn=document.getElementById('invoice-copy-btn');
+    btn.textContent='Скопійовано ✓';
+    btn.style.color='var(--green)';
+    setTimeout(()=>{btn.textContent='Копіювати';btn.style.color='';},2000);
   }).catch(()=>{document.execCommand('copy');});
 }
 
