@@ -124,6 +124,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div id="quick-payment" style="display:none">
       <div id="qp-cart-empty" class="empty" style="display:none">У кошику ще немає товарів. Додай позиції на вкладках HYBRID / HYBRO / Аксесуари — рахунок формується з кошика.</div>
       <div id="qp-invoice-wrap" style="display:none">
+        <div class="section-label">Формат</div>
+        <div class="pill-group" style="margin-bottom:1rem">
+          <button class="pill active" id="invfmt-telegram" onclick="setInvFormat('telegram',this)">Telegram</button>
+          <button class="pill" id="invfmt-plain" onclick="setInvFormat('plain',this)">Звичайний текст (Viber, Instagram тощо)</button>
+        </div>
         <div class="section-label">Дані рахунку</div>
         <input id="inv-name" type="text" placeholder="Ім'я клієнта" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:.5rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
         <div style="display:flex;gap:.5rem;margin-bottom:.9rem">
@@ -466,6 +471,14 @@ function renderQuickPayment(){
   }
 }
 
+let invFormat='telegram';
+function setInvFormat(fmt,btn){
+  invFormat=fmt;
+  document.querySelectorAll('#quick-payment .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(document.getElementById('invoice-text').value) generateInvoice();
+}
+
 function generateInvoice(){
   const name=document.getElementById('inv-name').value.trim()||'клієнте';
   const number=document.getElementById('inv-number').value.trim()||'—';
@@ -473,20 +486,24 @@ function generateInvoice(){
   const total=cart.reduce((s,i)=>s+Math.round(i.retail*(1-i.discount))*i.qty,0);
   const itemLines=cart.map((i,idx)=>`${idx+1}. ${i.name} — ${i.qty} шт.`).join('\n');
 
+  const tg=invFormat==='telegram';
+  const wrap=t=>tg?`\`${t}\``:t;
+  const paymentHeader=tg?'Реквізити для оплати (натисни на виділений текст — скопіюється сам):':'Реквізити для оплати:';
+
   const text=`Доброго дня, ${name}!
 Надсилаю деталі вашого замовлення та реквізити для оплати за рахунком № ${number} від ${date} р.:
 Ваше замовлення:
 
 ${itemLines}
 
-Реквізити для оплати:
+${paymentHeader}
 
 * Отримувач: ФОП Сушко Владислав Юрійович
-* IBAN: \`UA543052990000026003031619772\`
-* ІПН / ЄДРПОУ: \`3094810756\`
+* IBAN: ${wrap('UA543052990000026003031619772')}
+* ІПН / ЄДРПОУ: ${wrap('3094810756')}
 * Банк: АТ «Приватбанк»
 * Сума до сплати: ${total.toLocaleString('uk-UA')} грн
-* Призначення платежу: \`Оплата за товар згідно з рах. № ${number} від ${date}\`
+* Призначення платежу: ${wrap(`Оплата за товар згідно з рах. № ${number} від ${date}`)}
 
 Будь ласка, надішліть квитанцію або скриншот оплати у відповідь, щоб ми передали замовлення в комплектацію та доставку. Дякую!`;
 
