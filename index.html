@@ -52,6 +52,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <button class="line-btn active" onclick="setLine('hybrid',this)">HYBRID</button>
     <button class="line-btn" onclick="setLine('hybro',this)">HYBRO</button>
     <button class="line-btn" onclick="setLine('acc',this)">Аксесуари</button>
+    <button class="line-btn" onclick="setLine('quick',this)">Швидкі відповіді</button>
   </div>
 </header>
 
@@ -90,6 +91,68 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="discount-group" id="acc-discounts"></div>
   </div>
 
+  <!-- ШВИДКІ ВІДПОВІДІ -->
+  <div id="section-quick" style="display:none">
+    <div class="pill-group" style="margin-bottom:1rem">
+      <button class="pill active" id="qtab-request" onclick="setQuickStage('request',this)">1. Запит клієнта</button>
+      <button class="pill" id="qtab-payment" onclick="setQuickStage('payment',this)">2. Оплата</button>
+      <button class="pill" id="qtab-shipped" onclick="setQuickStage('shipped',this)">3. Відвантажено</button>
+    </div>
+
+    <!-- 1. ЗАПИТ КЛІЄНТА -->
+    <div id="quick-request">
+      <div class="section-label">Товари з кошика</div>
+      <div id="qr-cart-empty" class="empty" style="display:none">У кошику ще немає товарів. Додай позиції на вкладках HYBRID / HYBRO / Аксесуари — вони автоматично підтягнуться сюди.</div>
+      <div id="qr-cart-list" style="margin-bottom:.9rem"></div>
+
+      <div class="section-label">Ім'я клієнта <span style="text-transform:none;font-weight:400">— необов'язково</span></div>
+      <input id="qr-name" type="text" placeholder="напр. Олено" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:.9rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+
+      <div class="section-label">Додаткові переваги / примітки <span style="text-transform:none;font-weight:400">— необов'язково, основні характеристики вже підтягуються з кошика</span></div>
+      <textarea id="qr-specs" placeholder="напр. IP55, інфрачервоне тепло без контакту з гарячою поверхнею, гарантія 5 років..." style="width:100%;height:90px;padding:.6rem .7rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:1rem;box-sizing:border-box;resize:vertical"></textarea>
+
+      <div class="card" style="position:relative">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Готовий текст</div>
+        <textarea id="qr-output" readonly style="width:100%;height:220px;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:vertical;line-height:1.5;box-sizing:border-box"></textarea>
+        <button onclick="copyQuick('qr-output','qr-copy-btn')" id="qr-copy-btn" style="position:absolute;top:1.4rem;right:1.4rem;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Копіювати</button>
+      </div>
+    </div>
+
+    <!-- 2. ОПЛАТА -->
+    <div id="quick-payment" style="display:none">
+      <div id="qp-cart-empty" class="empty" style="display:none">У кошику ще немає товарів. Додай позиції на вкладках HYBRID / HYBRO / Аксесуари — рахунок формується з кошика.</div>
+      <div id="qp-invoice-wrap" style="display:none">
+        <div class="section-label">Дані рахунку</div>
+        <input id="inv-name" type="text" placeholder="Ім'я клієнта" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:.5rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+        <div style="display:flex;gap:.5rem;margin-bottom:.9rem">
+          <input id="inv-number" type="text" placeholder="№ рахунка" style="flex:1;min-width:0;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+          <input id="inv-date" type="text" placeholder="дд.мм.рррр" style="flex:1;min-width:0;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+        </div>
+        <button onclick="generateInvoice()" style="width:100%;padding:9px;font-size:13px;font-weight:500;border:1px solid var(--blue-border);border-radius:var(--radius);background:var(--blue);color:var(--blue-text);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;margin-bottom:1rem">Згенерувати текст</button>
+        <div class="card" style="position:relative">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Готовий текст</div>
+          <textarea id="invoice-text" readonly style="width:100%;height:280px;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:vertical;line-height:1.5;box-sizing:border-box"></textarea>
+          <button onclick="copyInvoice()" id="invoice-copy-btn" style="position:absolute;top:1.4rem;right:1.4rem;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Копіювати</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ВІДВАНТАЖЕНО -->
+    <div id="quick-shipped" style="display:none">
+      <div class="section-label">Ім'я клієнта <span style="text-transform:none;font-weight:400">— необов'язково</span></div>
+      <input id="qs-name" type="text" placeholder="напр. Олено" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:.9rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+
+      <div class="section-label">№ ТТН <span style="text-transform:none;font-weight:400">— трек-номер відправлення, необов'язково</span></div>
+      <input id="qs-ttn" type="text" placeholder="20450123456789" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:1rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
+
+      <div class="card" style="position:relative">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Готовий текст</div>
+        <textarea id="qs-output" readonly style="width:100%;height:260px;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:vertical;line-height:1.5;box-sizing:border-box"></textarea>
+        <button onclick="copyQuick('qs-output','qs-copy-btn')" id="qs-copy-btn" style="position:absolute;top:1.4rem;right:1.4rem;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Копіювати</button>
+      </div>
+    </div>
+  </div>
+
   <!-- РЕЗУЛЬТАТ -->
   <div id="result-box" class="result-box" style="display:none">
     <div class="result-label">Ціна</div>
@@ -120,22 +183,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <div style="position:relative">
         <textarea id="cart-copy-text" readonly style="width:100%;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:none;height:110px;line-height:1.5"></textarea>
         <button onclick="copyCart()" style="position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif" id="cart-copy-btn">Копіювати кошик</button>
-      </div>
-    </div>
-    <button onclick="toggleInvoiceForm()" id="invoice-toggle-btn" style="margin-top:.75rem;width:100%;padding:9px;font-size:13px;font-weight:500;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Сформувати рахунок</button>
-    <div id="invoice-form" style="display:none;margin-top:.75rem;padding:.9rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
-      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem">Дані рахунку</div>
-      <input id="inv-name" type="text" placeholder="Ім'я клієнта" style="width:100%;padding:.5rem .6rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);margin-bottom:.5rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
-      <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
-        <input id="inv-number" type="text" placeholder="№ рахунка" style="flex:1;min-width:0;padding:.5rem .6rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
-        <input id="inv-date" type="text" placeholder="дд.мм.рррр" style="flex:1;min-width:0;padding:.5rem .6rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
-      </div>
-      <button onclick="generateInvoice()" style="width:100%;padding:9px;font-size:13px;font-weight:500;border:1px solid var(--blue-border);border-radius:var(--radius);background:var(--blue);color:var(--blue-text);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Згенерувати текст</button>
-      <div id="invoice-result" style="display:none;margin-top:.75rem">
-        <div style="position:relative">
-          <textarea id="invoice-text" readonly style="width:100%;padding:.6rem .75rem;font-size:13px;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:none;height:280px;line-height:1.5;box-sizing:border-box"></textarea>
-          <button onclick="copyInvoice()" id="invoice-copy-btn" style="position:absolute;top:6px;right:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Копіювати</button>
-        </div>
       </div>
     </div>
   </div>
@@ -248,6 +295,39 @@ const accNames={holder:'Тримач HYBRO',hook:'Гачок HYBRO'};
 // Знижки як у HYBRID
 const accDiscounts=hybridDiscounts;
 
+// ── ХАРАКТЕРИСТИКИ (для автопідстановки у "Швидких відповідях") ──
+const hybroSpecs = {
+  '1L': { power:'160 Вт', width:620, height:300, thickness:8, area:'3 м²', weight:'4 кг' },
+  '2M': { power:'350 Вт', width:470, height:900, thickness:8, area:'6 м²', weight:'8 кг' },
+  '3M': { power:'470 Вт', width:470, height:1200, thickness:8, area:'9 м²', weight:'11 кг' }
+};
+const hybridSpecs = {
+  '375': { power:'375 Вт', width:600, height:600, thickness:12, area:'5-7 м²', weight:'10 кг' },
+  '420': { power:'420 Вт', width:900, height:450, thickness:14, area:'6-8 м²', weight:'12 кг' },
+  '550': { power:'550 Вт', width:900, height:600, thickness:15, area:'8-10 м²', weight:'18 кг' }
+};
+// Тримачі: розмір визначається за першою літерою моделі (S/M/L), гачок — фіксований розмір
+const holderDims = {
+  S: { width:300, height:20, thickness:10 },
+  M: { width:450, height:20, thickness:10 },
+  L: { width:600, height:20, thickness:10 }
+};
+const hookDims = { width:60, height:20, thickness:10 };
+function accSpecsFor(type, model){
+  if(type==='hook') return { ...hookDims };
+  if(type==='holder') return holderDims[model.charAt(0)] || null;
+  return null;
+}
+function formatSpecs(s){
+  if(!s) return '';
+  const lines=[];
+  if(s.power) lines.push(`Потужність ${s.power}`);
+  if(s.width&&s.height&&s.thickness) lines.push(`Розмір ${s.width}×${s.height}×${s.thickness} мм`);
+  if(s.area) lines.push(`Опалювальна площа ${s.area}`);
+  if(s.weight) lines.push(`Вага ${s.weight}`);
+  return lines.join('\n');
+}
+
 // ── СТАН ──
 let line='hybrid';
 let hModel='375', hColor='W', hThermo=false, hDiscount=null;
@@ -262,19 +342,19 @@ function currentSelection(){
   if(line==='hybrid'){
     const item=hybridData.find(i=>i.model===hModel&&i.color===hColor&&i.thermo===hThermo);
     if(!item) return null;
-    return {name:`HYBRID${hThermo?' T':''} ${hModel} (${hColor})`, retail:item.retail, discount:hDiscount};
+    return {name:`HYBRID${hThermo?' T':''} ${hModel} (${hColor})`, retail:item.retail, discount:hDiscount, specs:hybridSpecs[hModel]||null};
   }
   if(line==='hybro'){
     const colorCode=oColorW+oRail;
     const item=hybroData.find(i=>i.size===oSize&&i.glass===oGlass&&i.color===colorCode);
     if(!item) return null;
     const glassPrefix=oGlass==='S'?' S':'';
-    return {name:'HYBRO'+glassPrefix+' '+oSize+' '+oColorW+oRail, retail:item.retail, discount:oDiscount};
+    return {name:'HYBRO'+glassPrefix+' '+oSize+' '+oColorW+oRail, retail:item.retail, discount:oDiscount, specs:hybroSpecs[oSize]||null};
   }
   if(line==='acc'){
     const item=accData.find(i=>i.type===aType&&i.model===aModel);
     if(!item) return null;
-    return {name:`${accNames[aType]} ${aModel}`, retail:item.retail, discount:aDiscount};
+    return {name:`${accNames[aType]} ${aModel}`, retail:item.retail, discount:aDiscount, specs:accSpecsFor(aType,aModel)};
   }
   return null;
 }
@@ -282,7 +362,7 @@ function currentSelection(){
 function addToCart(){
   const sel=currentSelection();
   if(!sel) return;
-  cart.push({id:cartIdSeq++, name:sel.name, retail:sel.retail, discount:(sel.discount===null?0:sel.discount), qty:1});
+  cart.push({id:cartIdSeq++, name:sel.name, retail:sel.retail, discount:(sel.discount===null?0:sel.discount), qty:1, specs:sel.specs||null});
   renderCart();
   document.getElementById('cart-section').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -350,6 +430,9 @@ function renderCart(){
   });
   if(cart.length) lines.push(`Разом: ${total.toLocaleString('uk-UA')} ₴`);
   document.getElementById('cart-copy-text').value=lines.join('\n');
+
+  renderQuickRequest(); // тримаємо вкладку "Швидкі відповіді" синхронною з кошиком
+  renderQuickPayment();
 }
 
 function copyCart(){
@@ -363,11 +446,18 @@ function copyCart(){
   }).catch(()=>{document.execCommand('copy');});
 }
 
-function toggleInvoiceForm(){
-  const form=document.getElementById('invoice-form');
-  const show=form.style.display==='none';
-  form.style.display=show?'block':'none';
-  if(show && !document.getElementById('inv-date').value){
+function renderQuickPayment(){
+  const emptyNote=document.getElementById('qp-cart-empty');
+  const wrap=document.getElementById('qp-invoice-wrap');
+  if(!emptyNote||!wrap) return; // ще не відрендерено
+  if(!cart.length){
+    emptyNote.style.display='block';
+    wrap.style.display='none';
+    return;
+  }
+  emptyNote.style.display='none';
+  wrap.style.display='block';
+  if(!document.getElementById('inv-date').value){
     const d=new Date();
     const pad=n=>String(n).padStart(2,'0');
     document.getElementById('inv-date').value=`${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
@@ -399,8 +489,8 @@ ${itemLines}
 Будь ласка, надішліть квитанцію або скриншот оплати у відповідь, щоб ми передали замовлення в комплектацію та доставку. Дякую!`;
 
   document.getElementById('invoice-text').value=text;
-  document.getElementById('invoice-result').style.display='block';
 }
+
 
 function copyInvoice(){
   const ta=document.getElementById('invoice-text');
@@ -560,9 +650,128 @@ function setLine(l,btn){
   document.getElementById('section-hybrid').style.display=l==='hybrid'?'block':'none';
   document.getElementById('section-hybro').style.display=l==='hybro'?'block':'none';
   document.getElementById('section-acc').style.display=l==='acc'?'block':'none';
+  document.getElementById('section-quick').style.display=l==='quick'?'block':'none';
   hideResult();
   if(l==='hybro') initHybro();
   if(l==='acc') initAcc();
+  if(l==='quick') initQuick();
+}
+
+// ══════════════════════════════════════════════
+// ШВИДКІ ВІДПОВІДІ
+// ══════════════════════════════════════════════
+
+// Відео-інструкції — фіксовані посилання
+const QUICK_VIDEOS = [
+  { label: 'Складання та монтаж', url: 'https://www.youtube.com/watch?v=2jVK9yHACBw' },
+  { label: 'Підключення через кабельний вивід (прихований монтаж)', url: 'https://www.youtube.com/watch?v=fIwoFFRW2IY' },
+  { label: 'Підключення в розетку', url: 'https://www.youtube.com/watch?v=WSKCtTL5yWU' },
+  { label: 'Налаштування та керування', url: 'https://www.youtube.com/watch?v=89dOc3vG9PQ' }
+];
+
+let quickStage='request';
+let quickInitialized=false;
+
+function initQuick(){
+  if(!quickInitialized){
+    document.getElementById('qr-name').oninput=renderQuickRequest;
+    document.getElementById('qr-specs').oninput=renderQuickRequest;
+    document.getElementById('qs-name').oninput=renderQuickShipped;
+    document.getElementById('qs-ttn').oninput=renderQuickShipped;
+    quickInitialized=true;
+  }
+  renderQuickRequest();
+  renderQuickPayment();
+  renderQuickShipped();
+}
+
+function setQuickStage(stage,btn){
+  quickStage=stage;
+  document.querySelectorAll('#section-quick > .pill-group .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('quick-request').style.display=stage==='request'?'block':'none';
+  document.getElementById('quick-payment').style.display=stage==='payment'?'block':'none';
+  document.getElementById('quick-shipped').style.display=stage==='shipped'?'block':'none';
+}
+
+function renderQuickRequest(){
+  const emptyNote=document.getElementById('qr-cart-empty');
+  const listBox=document.getElementById('qr-cart-list');
+  const output=document.getElementById('qr-output');
+  if(!emptyNote||!listBox||!output) return; // ще не відрендерено
+
+  if(!cart.length){
+    emptyNote.style.display='block';
+    listBox.innerHTML='';
+    output.value='';
+    return;
+  }
+  emptyNote.style.display='none';
+
+  const rows=cart.map(i=>{
+    const unitPrice=Math.round(i.retail*(1-i.discount));
+    const lineTotal=unitPrice*i.qty;
+    return { name:i.name, qty:i.qty, lineTotal, discount:i.discount, specs:i.specs };
+  });
+  const total=rows.reduce((s,r)=>s+r.lineTotal,0);
+
+  // Прев'ю списку над текстовим полем
+  listBox.innerHTML=rows.map(r=>
+    `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem;margin-bottom:.4rem">
+      <span style="font-size:13px">${r.name}${r.qty>1?` × ${r.qty}`:''}${r.specs?'':' <span style=\'color:var(--text3)\'>(без характеристик)</span>'}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600">${r.lineTotal.toLocaleString('uk-UA')} ₴</span>
+    </div>`
+  ).join('');
+
+  const name=document.getElementById('qr-name').value.trim();
+  const specs=document.getElementById('qr-specs').value.trim();
+  const greeting=name?`Вітаю, ${name}!\n\n`:'';
+
+  const itemBlocks=rows.map(r=>{
+    const qtyPart=r.qty>1?` × ${r.qty}`:'';
+    const discPart=r.discount>0?` (-${Math.round(r.discount*100)}%)`:'';
+    let block=`${r.name}${qtyPart} — ${r.lineTotal.toLocaleString('uk-UA')} грн${discPart}`;
+    if(r.specs) block+=`\n${formatSpecs(r.specs)}`;
+    return block;
+  });
+
+  let text=`${greeting}Ваше замовлення:\n\n${itemBlocks.join('\n\n')}`;
+  if(rows.length>1) text+=`\n\nРазом: ${total.toLocaleString('uk-UA')} грн`;
+  if(specs) text+=`\n\n${specs}`;
+  text+=`\n\nПідкажіть, чи потрібні додаткові аксесуари - і ми оформимо замовлення.`;
+  output.value=text;
+}
+
+function renderQuickShipped(){
+  const name=document.getElementById('qs-name').value.trim();
+  const ttn=document.getElementById('qs-ttn').value.trim();
+  const greeting=name?`${name}, д`:'Д';
+  const lines=[];
+  lines.push(`${greeting}якуємо за замовлення рушникосушки ✨`);
+  lines.push('Щоб процес встановлення та налаштування був максимально простим і швидким, підготували для вас короткі відеоінструкції:');
+  QUICK_VIDEOS.forEach(v=>{
+    lines.push(`🔹 ${v.label}:`);
+    lines.push(v.url);
+  });
+  if(ttn){
+    lines.push('');
+    lines.push(`📦 Номер ТТН для відстеження: ${ttn}`);
+  }
+  lines.push('');
+  lines.push("Коли все буде встановлено, будемо щиро вдячні, якщо поділитеся фото рушникосушки у вашому інтер'єрі. Нам завжди дуже приємно бачити, як наші вироби доповнюють затишок ванних кімнат! 📸");
+  lines.push("Якщо виникнуть будь-які запитання щодо монтажу чи роботи — ми завжди на зв'язку.");
+  document.getElementById('qs-output').value=lines.join('\n');
+}
+
+function copyQuick(taId,btnId){
+  const ta=document.getElementById(taId);
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const btn=document.getElementById(btnId);
+    btn.textContent='Скопійовано ✓';
+    btn.style.color='var(--green)';
+    setTimeout(()=>{btn.textContent='Копіювати';btn.style.color='';},2000);
+  }).catch(()=>{document.execCommand('copy');});
 }
 
 // Логотип
