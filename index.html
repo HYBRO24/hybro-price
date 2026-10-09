@@ -129,6 +129,11 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <button class="pill active" id="invfmt-telegram" onclick="setInvFormat('telegram',this)">Telegram</button>
           <button class="pill" id="invfmt-plain" onclick="setInvFormat('plain',this)">Звичайний текст (Viber, Instagram тощо)</button>
         </div>
+        <div class="section-label">Реквізити</div>
+        <div class="pill-group" id="inv-bank-group" style="margin-bottom:1rem">
+          <button class="pill active" id="invbank-privat" onclick="setInvBank('privat',this)">Приватбанк</button>
+          <button class="pill" id="invbank-pumb" onclick="setInvBank('pumb',this)">ПУМБ</button>
+        </div>
         <div class="section-label">Дані рахунку</div>
         <input id="inv-name" type="text" placeholder="Ім'я клієнта" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:.5rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
         <div style="display:flex;gap:.5rem;margin-bottom:.9rem">
@@ -474,7 +479,19 @@ function renderQuickPayment(){
 let invFormat='telegram';
 function setInvFormat(fmt,btn){
   invFormat=fmt;
-  document.querySelectorAll('#quick-payment .pill').forEach(b=>b.classList.remove('active'));
+  btn.parentElement.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(document.getElementById('invoice-text').value) generateInvoice();
+}
+
+const invBanks={
+  privat:{iban:'UA543052990000026003031619772',edrpou:'3094810756',bank:'АТ «Приватбанк»',currency:null},
+  pumb:{iban:'UA073348510000000026009383186',edrpou:'3094810756',bank:'АТ «ПУМБ»',currency:'UAH'}
+};
+let invBank='privat';
+function setInvBank(bank,btn){
+  invBank=bank;
+  btn.parentElement.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(document.getElementById('invoice-text').value) generateInvoice();
 }
@@ -486,6 +503,7 @@ function generateInvoice(){
   const total=cart.reduce((s,i)=>s+Math.round(i.retail*(1-i.discount))*i.qty,0);
   const itemLines=cart.map((i,idx)=>`${idx+1}. ${i.name} — ${i.qty} шт.`).join('\n');
 
+  const b=invBanks[invBank];
   const tg=invFormat==='telegram';
   const wrap=t=>tg?`\`${t}\``:t;
   const paymentHeader=tg?'Реквізити для оплати (натисни на виділений текст — скопіюється сам):':'Реквізити для оплати:';
@@ -499,9 +517,9 @@ ${itemLines}
 ${paymentHeader}
 
 * Отримувач: ФОП Сушко Владислав Юрійович
-* IBAN: ${wrap('UA543052990000026003031619772')}
-* ІПН / ЄДРПОУ: ${wrap('3094810756')}
-* Банк: АТ «Приватбанк»
+${b.currency?`* Код валюти: ${b.currency}\n`:''}* IBAN: ${wrap(b.iban)}
+* ІПН / ЄДРПОУ: ${wrap(b.edrpou)}
+* Банк: ${b.bank}
 * Сума до сплати: ${total.toLocaleString('uk-UA')} грн
 * Призначення платежу: ${wrap(`Оплата за товар згідно з рах. № ${number} від ${date}`)}
 
