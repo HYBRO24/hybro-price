@@ -151,6 +151,12 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
     <!-- 3. ВІДВАНТАЖЕНО -->
     <div id="quick-shipped" style="display:none">
+      <div class="section-label">Товар</div>
+      <div class="pill-group" style="margin-bottom:.9rem">
+        <button class="pill active" id="qs-prod-hybro" onclick="setShippedProduct('hybro',this)">HYBRO</button>
+        <button class="pill" id="qs-prod-hybrid" onclick="setShippedProduct('hybrid',this)">HYBRID</button>
+      </div>
+
       <div class="section-label">Ім'я клієнта <span style="text-transform:none;font-weight:400">— необов'язково</span></div>
       <input id="qs-name" type="text" placeholder="напр. Олено" style="width:100%;padding:.6rem .7rem;font-size:14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);margin-bottom:.9rem;font-family:'IBM Plex Sans',sans-serif;box-sizing:border-box">
 
@@ -779,14 +785,36 @@ function renderQuickRequest(){
   output.value=text;
 }
 
+// Відео-інструкції для керамічних панелей HYBRID
+const QUICK_VIDEOS_HYBRID = [
+  { label: 'Монтаж та встановлення панелі на стіну', url: 'https://www.youtube.com/watch?v=V5pS87CSikc' },
+  { label: 'Підключення до терморегулятора', url: 'https://www.youtube.com/watch?v=WaD0VO4tDgI' }
+];
+
+let shippedProduct='hybro';
+
+function setShippedProduct(prod,btn){
+  shippedProduct=prod;
+  document.querySelectorAll('#quick-shipped .pill-group .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderQuickShipped();
+}
+
 function renderQuickShipped(){
   const name=document.getElementById('qs-name').value.trim();
   const ttn=document.getElementById('qs-ttn').value.trim();
   const greeting=name?`${name}, д`:'Д';
+  const isHybrid=shippedProduct==='hybrid';
+  const videos=isHybrid?QUICK_VIDEOS_HYBRID:QUICK_VIDEOS;
   const lines=[];
-  lines.push(`${greeting}якуємо за замовлення рушникосушки ✨`);
-  lines.push('Щоб процес встановлення та налаштування був максимально простим і швидким, підготували для вас короткі відеоінструкції:');
-  QUICK_VIDEOS.forEach(v=>{
+  if(isHybrid){
+    lines.push(`${greeting}якуємо за замовлення керамічних панелей HYBRID! ✨`);
+    lines.push('Щоб процес монтажу та підключення був максимально простим і зрозумілим, ми підготували для вас короткі відеоінструкції:');
+  } else {
+    lines.push(`${greeting}якуємо за замовлення рушникосушки ✨`);
+    lines.push('Щоб процес встановлення та налаштування був максимально простим і швидким, підготували для вас короткі відеоінструкції:');
+  }
+  videos.forEach(v=>{
     lines.push(`🔹 ${v.label}:`);
     lines.push(v.url);
   });
@@ -795,8 +823,13 @@ function renderQuickShipped(){
     lines.push(`📦 Номер ТТН для відстеження: ${ttn}`);
   }
   lines.push('');
-  lines.push("Коли все буде встановлено, будемо щиро вдячні, якщо поділитеся фото рушникосушки у вашому інтер'єрі. Нам завжди дуже приємно бачити, як наші вироби доповнюють затишок ванних кімнат! 📸");
-  lines.push("Якщо виникнуть будь-які запитання щодо монтажу чи роботи — ми завжди на зв'язку.");
+  if(isHybrid){
+    lines.push("Коли все буде встановлено, будемо щиро вдячні, якщо поділитеся фото панелей у вашому інтер'єрі. Нам завжди дуже приємно бачити, як HYBRID наповнює ваші оселі затишком і теплом! 📸");
+    lines.push("Якщо виникнуть будь-які запитання щодо монтажу чи роботи системи опалення - ми завжди на зв'язку.");
+  } else {
+    lines.push("Коли все буде встановлено, будемо щиро вдячні, якщо поділитеся фото рушникосушки у вашому інтер'єрі. Нам завжди дуже приємно бачити, як наші вироби доповнюють затишок ванних кімнат! 📸");
+    lines.push("Якщо виникнуть будь-які запитання щодо монтажу чи роботи - ми завжди на зв'язку.");
+  }
   document.getElementById('qs-output').value=lines.join('\n');
 }
 
